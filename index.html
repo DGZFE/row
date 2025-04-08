@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Command Generator</title>
+</head>
+<body>
+    <pre>
+import os
+import winreg
+
+def add_to_environment_path(directory):
+    """Add directory to system PATH environment variable."""
+    try:
+        # Open the registry key
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                             r"System\CurrentControlSet\Control\Session Manager\Environment", 0, winreg.KEY_WRITE)
+
+        # Get the current PATH value
+        current_path = winreg.QueryValueEx(key, "Path")[0]
+
+        # Append the new directory if it's not already included
+        if directory not in current_path:
+            new_path = current_path + ";" + directory
+            winreg.SetValueEx(key, "Path", 0, winreg.REG_SZ, new_path)
+            print(f"Added {directory} to system PATH.")
+        else:
+            print(f"{directory} is already in the PATH.")
+        
+        # Notify the system about the change
+        os.system("setx PATH \"%PATH%\"")
+    except Exception as e:
+        print(f"Error adding to PATH: {e}")
+
+def create_custom_command(bat_file, custom_command):
+    """Create a custom command for a .bat file."""
+    directory = os.path.dirname(bat_file)
+    
+    # Ensure the directory is added to the PATH
+    add_to_environment_path(directory)
+    
+    # Rename the .bat file to the custom command
+    custom_command_path = os.path.join(directory, f"{custom_command}.bat")
+    os.rename(bat_file, custom_command_path)
+    print(f"Custom command '{custom_command}' created.")
+
+if __name__ == "__main__":
+    bat_file = input("Enter the path to the .bat file: ")
+    custom_command = input("Enter the name of your custom command: ")
+    create_custom_command(bat_file, custom_command)
+    </pre>
+</body>
+</html>
